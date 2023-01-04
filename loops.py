@@ -45,9 +45,11 @@ my_friends = [
 ]
 
 start_s=["Kofi","Emmanuel"]
+starts_with_s= [y for y in my_friends if y.startswith("S")]
 
 for x in my_friends:
     if x.startswith("S"):
         start_s.append(x)
         
 print(start_s)
+print("Starts with s",starts_with_s)
