@@ -1,0 +1,11 @@
+print("Calculate the Area of Triangle")
+height=input("Enter the height of the Triangle      "   )
+height_value=float(height)
+width = input("Enter the width of the Triangle    ")
+width_value = float(width)
+Area_of_triangle = 0.5*(height_value * width_value)
+print("The Area of the Triangle is ", Area_of_triangle, "square meters")
+#Using the f string 
+# print(f"The Area of the Triangle, {Area_of_Triangle}")
+print(f"Area of Triangle",{Area_of_triangle})
+print(f"The Area of the Triangle, {Area_of_triangle}")
