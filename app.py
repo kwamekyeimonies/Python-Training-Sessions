@@ -10,7 +10,7 @@ Your selection: """
 welcome = "Welcome to the tea-code developers"
 
 def propmt_new_entry():
-    entry_content=input("What have you learned today?")
+    entry_content=input("What have you learned today?   ")
     entry_date=input("Enter the date: (eg:01/01/2023)")
     add_entry(entry_content,entry_date) 
     
