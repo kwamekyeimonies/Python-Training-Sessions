@@ -1,23 +1,49 @@
 import datetime
 import sqlite3
 
-CREATE_MOVIES_TABLE = """(
+CREATE_MOVIES_TABLE = """CREATE TABLE IF NOT EXISTS movies(
+    id INTEGER PRIMARY KEY,
     title TEXT,
-    release_timestamp REAL,
-    watched INTEGER
+    release_timestamp REAL
+);
+"""
+
+CREATE_WATCHED_TABLE = """CREATE TABLE IF NOT EXISTS watched(
+    user_username TEXT,
+    movie_id INTEGER,
+    FOREIGN KEY(user_username) REFERENCES users(username),
+    FOREIGN KEY(movie_id) REFERENCES movies(id)
 )
 """
 
-INSERT_MOVIES= "INSERT INTO movies(title,release_timestamp,watch) VALUES(?,?,0);"
+CREATE_USERS_TABLE = """CREATE TABLE IF NOT EXISTS users(
+    username TEXT PRIMARY KEY
+)
+"""
+
+INSERT_MOVIES= "INSERT INTO movies(title,release_timestamp) VALUES(?,?);"
 SELECT_ALL_MOVIES="SELECT * FROM movies;"
+INSERT_USER="INSERT INTO users(username) VALUES(?);"
 SELECT_UPCOMING_MOVIES="SELECT * FROM movies WHERE release_time > ?;"
-SELECT_WATCHED_MOVIES="SELECT * movies WHERE watchedd = 1;"
+SELECT_WATCHED_MOVIES="""
+SELECT *
+FROM movies
+JOIN watched ON movies.id = watched.movie_id
+JOIN users ON users.username = watched.user_username
+WHERE users.username=?;
+"""
+SET_MOVIES_WATCHED="UPDATE movies SET watched = 1 WHERE title=?;"
+DELETE_MOVIE="DELETE FROM movies WHERE title=?;"
+INSERT_WATCHED_MOVIES="INSERT INTO watched(user_username,movie_id) VALUES(?,?);"
+
 
 connection = sqlite3.connect("data.db")
 
 def create_table():
     with connection:
         connection.execute(CREATE_MOVIES_TABLE)
+        connection.execute(CREATE_USERS_TABLE)
+        connection.execute(CREATE_WATCHED_TABLE)
         
 def add_movie(title,release_timestamp):
     with connection:
@@ -31,9 +57,20 @@ def get_movies(upcoming=False):
             cursor.execute(SELECT_UPCOMING_MOVIES,(today_timestamp) )
         else:
             cursor.execute(SELECT_ALL_MOVIES)
-            return cursor.fetchall
+            return cursor.fetchall()
+            # cursor.close()
         
-def get_watched_movies():
+def get_watched_movies(username):
     with connection:
         cursor = connection.cursor()
+        cursor.execute(SELECT_WATCHED_MOVIES, (username,))
+        return cursor.fetchall()
+        # cursor.close()
         
+def watch_movie(username,movie_id):
+    with connection:
+        connection.execute(INSERT_WATCHED_MOVIES,(username,movie_id))
+        
+def add_user(username):
+    with connection:
+        connection.execute(INSERT_USER,(username,))
