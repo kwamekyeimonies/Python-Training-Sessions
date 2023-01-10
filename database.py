@@ -22,9 +22,13 @@ CREATE_USERS_TABLE = """CREATE TABLE IF NOT EXISTS users(
 """
 
 INSERT_MOVIES= "INSERT INTO movies(title,release_timestamp) VALUES(?,?);"
+
 SELECT_ALL_MOVIES="SELECT * FROM movies;"
+
 INSERT_USER="INSERT INTO users(username) VALUES(?);"
+
 SELECT_UPCOMING_MOVIES="SELECT * FROM movies WHERE release_time > ?;"
+
 SELECT_WATCHED_MOVIES="""
 SELECT *
 FROM movies
@@ -32,9 +36,18 @@ JOIN watched ON movies.id = watched.movie_id
 JOIN users ON users.username = watched.user_username
 WHERE users.username=?;
 """
+
 SET_MOVIES_WATCHED="UPDATE movies SET watched = 1 WHERE title=?;"
+
 DELETE_MOVIE="DELETE FROM movies WHERE title=?;"
+
 INSERT_WATCHED_MOVIES="INSERT INTO watched(user_username,movie_id) VALUES(?,?);"
+
+SEARCH_MOVIES ="SELECT * FROM movies WHERE title LIKE ?;"
+
+CREATE_RELEASE_INDEX = """
+CREATE INDEX IF NOT EXISTS idx_movies_release ON movies(release_timestamp);
+"""
 
 
 connection = sqlite3.connect("data.db")
@@ -44,6 +57,7 @@ def create_table():
         connection.execute(CREATE_MOVIES_TABLE)
         connection.execute(CREATE_USERS_TABLE)
         connection.execute(CREATE_WATCHED_TABLE)
+        connection.execute(CREATE_RELEASE_INDEX)
         
 def add_movie(title,release_timestamp):
     with connection:
@@ -74,3 +88,9 @@ def watch_movie(username,movie_id):
 def add_user(username):
     with connection:
         connection.execute(INSERT_USER,(username,))
+        
+def search_movies(search_term):
+    with connection:
+        cursor = connection.cursor()
+        cursor.execute(SEARCH_MOVIES, (f"%{search_term}%", ))
+        return cursor.fetchall()

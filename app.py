@@ -9,7 +9,8 @@ menu="""
  4)Watch a movie
  5)View watched movies
  6)Add User
- 7)Exit
+ 7)Search Movie
+ 8)Exit
  
  Your selection: """
  
@@ -55,10 +56,18 @@ def prompt_show_watched_movies():
     if movies:
         print_movie_list("Watched Movies", movies)
     else:
-        print("No Movies watched by User")     
+        print("No Movies watched by User")   
+        
+def prompt_search_movies():
+    search_term= input("Enter movie title: ")
+    movies = database.search_movies(search_term)
+    if movies:
+        print_movie_list("Movies found ",movies)  
+    else:
+        print("No movies Found....!!!!")
     
 
-while(user_input := input(menu)) !="7" :
+while(user_input := input(menu)) !="8" :
     if user_input == "1":
         prompt_add_movie()
     elif user_input == "2":
@@ -72,6 +81,8 @@ while(user_input := input(menu)) !="7" :
     elif user_input == "5":
         prompt_show_watched_movies()                       
     elif user_input == "6":
-        prompt_add_user()        
+        prompt_add_user()  
+    elif user_input == "7":
+        prompt_search_movies()              
     else:
         print("Invalid input, try again!")
