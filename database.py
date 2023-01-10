@@ -1,96 +1,96 @@
-import datetime
-import sqlite3
+from typing import List, Tuple
 
-CREATE_MOVIES_TABLE = """CREATE TABLE IF NOT EXISTS movies(
-    id INTEGER PRIMARY KEY,
+import psycopg2
+from psycopg2.extras import execute_values
+
+
+# db_connection = psycopg2.connect(
+#     dbname=os.environ["DB_NAME"],
+#     dbuser=os.envron["DB_USER"],
+#     db_password=os.envron["DB_PASSWORD"],
+#     db_host=os.envron["DB_HOST"],
+#     db_port=os.envron["DB_PORT"],
+# )
+
+CREATE_POLLS = """
+CREATE TABLE IF NOT EXISTS polls(
+    id SERIAL PRIMARY KEY,
     title TEXT,
-    release_timestamp REAL
+    owner_username TEXT
 );
 """
 
-CREATE_WATCHED_TABLE = """CREATE TABLE IF NOT EXISTS watched(
-    user_username TEXT,
-    movie_id INTEGER,
-    FOREIGN KEY(user_username) REFERENCES users(username),
-    FOREIGN KEY(movie_id) REFERENCES movies(id)
-)
+CREATE_OPTIONS="""
+CREATE TABLE IF NOT EXISTS options(
+    id SERIAL PRIMARY KEY,
+    option_text TEXT,
+    poll_id FOREIGN KEY(poll_id) REFERENCES (id)
+);
 """
 
-CREATE_USERS_TABLE = """CREATE TABLE IF NOT EXISTS users(
-    username TEXT PRIMARY KEY
-)
+CREATE_VOTES="""
+CREATE TABLE IF NOT EXISTS votes(
+    username TEXT,
+    option_id INTEGER,
+    FOREIGN KEY(option_id) REFERENCES (id)
+);
 """
 
-INSERT_MOVIES= "INSERT INTO movies(title,release_timestamp) VALUES(?,?);"
-
-SELECT_ALL_MOVIES="SELECT * FROM movies;"
-
-INSERT_USER="INSERT INTO users(username) VALUES(?);"
-
-SELECT_UPCOMING_MOVIES="SELECT * FROM movies WHERE release_time > ?;"
-
-SELECT_WATCHED_MOVIES="""
-SELECT *
-FROM movies
-JOIN watched ON movies.id = watched.movie_id
-JOIN users ON users.username = watched.user_username
-WHERE users.username=?;
+SELECT_ALL_POLLS ="""
+SELECT * FROM polls;
 """
 
-SET_MOVIES_WATCHED="UPDATE movies SET watched = 1 WHERE title=?;"
+SELECT_POLLS_WITH_OPTIONS="""
+SELECT * FROM polls
+JOIN options ON polls.id = options.poll_id
+WHERE polls.id = %s;" 
+"""
 
-DELETE_MOVIE="DELETE FROM movies WHERE title=?;"
+INSERT_OPTION="""
+INSERT INTO options(
+    option_text, poll_id
+) VALUES(%s);
+"""
 
-INSERT_WATCHED_MOVIES="INSERT INTO watched(user_username,movie_id) VALUES(?,?);"
-
-SEARCH_MOVIES ="SELECT * FROM movies WHERE title LIKE ?;"
-
-CREATE_RELEASE_INDEX = """
-CREATE INDEX IF NOT EXISTS idx_movies_release ON movies(release_timestamp);
+INSERT_VOTE="""
+INSERT INTO VOTES(
+    username, option_id
+) VALUES(%s, %s);
 """
 
 
-connection = sqlite3.connect("data.db")
-
-def create_table():
+def create_tables(connection):
     with connection:
-        connection.execute(CREATE_MOVIES_TABLE)
-        connection.execute(CREATE_USERS_TABLE)
-        connection.execute(CREATE_WATCHED_TABLE)
-        connection.execute(CREATE_RELEASE_INDEX)
-        
-def add_movie(title,release_timestamp):
+        with connection.cursor() as cursor:
+            cursor.execute(CREATE_POLLS)
+            cursor.execute(CREATE_OPTIONS)
+            cursor.execute(CREATE_VOTES)
+            
+def get_polls(connection):
     with connection:
-        connection.execute(INSERT_MOVIES,(title,release_timestamp))
-        
-def get_movies(upcoming=False):
-    with connection:
-        cursor = connection.cursor()
-        if upcoming:
-            today_timestamp=datetime.datetime.today().timestamp()
-            cursor.execute(SELECT_UPCOMING_MOVIES,(today_timestamp) )
-        else:
-            cursor.execute(SELECT_ALL_MOVIES)
+        with connection.cursor() as cursor:
+            cursor.execute(SELECT_ALL_POLLS)
             return cursor.fetchall()
-            # cursor.close()
         
-def get_watched_movies(username):
+def get_latest_polls(connection):
     with connection:
-        cursor = connection.cursor()
-        cursor.execute(SELECT_WATCHED_MOVIES, (username,))
-        return cursor.fetchall()
-        # cursor.close()
+        with connection.cursor() as cursor:
+            pass
         
-def watch_movie(username,movie_id):
-    with connection:
-        connection.execute(INSERT_WATCHED_MOVIES,(username,movie_id))
         
-def add_user(username):
+def get_poll_details(connection,poll_id):
     with connection:
-        connection.execute(INSERT_USER,(username,))
+        with connection.cursor() as cursor:
+            cursor.execute(SELECT_POLLS_WITH_OPTIONS, (poll_id,))
+            return cursor.fetchall()
         
-def search_movies(search_term):
+        
+def create_poll(connection, title, owner, options):
     with connection:
-        cursor = connection.cursor()
-        cursor.execute(SEARCH_MOVIES, (f"%{search_term}%", ))
-        return cursor.fetchall()
+        with connection.cursor() as cursor:
+            pass
+        
+def add_poll_vote(connection,username,option_id):
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(INSERT_VOTE, (username, option_id))
